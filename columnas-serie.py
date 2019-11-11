@@ -38,7 +38,7 @@ Dc = 0.2                # Diámetro del equipo
 A = math.pi*(Dc/2)**2   # Área del equipo
 S = 1.072*10**-6        # Flujo volumétrico de sólidos (m³/s)
 nu = 2.249*10**-6       # Flujo volumétrico de solvente (m³/s)
-tau = 4*3600            # Tiempo máximo a calcular en la simulación
+tau = 24*3600           # Tiempo máximo a calcular en la simulación
 
 # Estimación de parámetros
 uz = nu/(A)                                         # Velocidad lineal de solvente
@@ -109,71 +109,91 @@ def eqX(y):
         KeqX[3]*(y-KeqX[4])/(1-KeqX[3]*(y-KeqX[4]))
     return eqX
 
+
+index = 0
 # Funciones de transferencia de masa
-def batch(X, t):
+def column(F, t, Yini):
     '''
     '''
-    x = X[0]
-    y = X[1]
-    dxdt = K * (eqX(y)-x) / (1-eps)
-    dydt = -K * (eqX(y) - x) / eps
-    return [dxdt, dydt]
+    x = F[::2]
+    y = F[1::2]
+    global index
+    #y[0] = Yini[index]
+    print(index)
+    dFdt = np.empty_like(F)
+
+    dxdt = dFdt[::2]
+    dydt = dFdt[1::2]
+    
+    '_________________________________________________________________________________________________________________________'
+
+     # A lo largo de todo el extractor la variación de concentración en el sólido en función del tiempo es igual a la
+     # ecuación de transferencia de masa
+
+    dxdt[:] = K * (eqX(y[:]) - x[:]) / (1-eps)
+
+    '_________________________________________________________________________________________________________________________'
+
+     # En z = 0 ingresa el solvente, por lo que se considera que no hay acumulación en ese punto
+
+    dydt[0] = 0
+    
+     # A lo largo del extractor la variación se puede considerar la ecuación general
+    difusion = eps * Dax * np.diff(y[:], 2)/dz**2
+    conveccion = uz * np.diff(y[:-1], 1)/dz
+    transferencia = K * (eqX(y[1:-1]) - x[1:-1])
+
+    dydt[1:-1] = (difusion - conveccion - transferencia)/eps
+
+    dydt[-1] = (eps*Dax*(2*y[-2]-2*y[-1]) - uz *
+                (y[-1]-y[-2])/dz - K*(eqX(y[-1]) - x[-1]))/eps
+
+    '_________________________________________________________________________________________________________________________'
+
+    index += 1
+    return dFdt
 
 
-nt = 10000
-t = np.linspace(0,tau, nt)
+# Número de puntos
+nz = 100
+nt = tau
 
-x0 = porcentajeAC*dens
-y0 = 0
+# Condiciones iniciales
+eqLiq = 16.03
+F0 = np.ones(2*nz)
 
-sol0 = odeint(batch, [x0,y0], t)
-sol1 = odeint(batch, [sol0[-1][0],y0], t)
-sol2 = odeint(batch, [sol1[-1][0],y0], t)
-sol3 = odeint(batch, [sol2[-1][0],y0], t)
+F0[::2] = porcentajeAC*dens
+F0[1::2] = 0
 
-lista = []
-
-for i in range(0,10):
-    sol1 = odeint(batch, [x0, sol2[-1][1]], t)
-    sol2 = odeint(batch, [sol1[-1][0], sol3[-1][1]], t)
-    sol3 = odeint(batch, [sol2[-1][0], y0], t)
-    lista.append(sol3[-1][1])
+Y0in = np.empty_like(F0[1::2])
+Y0in[:] = 0
 
 
-plt.plot(t, sol0, label='sol0')
-plt.plot(t,sol1, label="sol1")
-plt.plot(t,sol2, label="sol2")
-plt.plot(t,sol3, label="sol3")
-plt.title('Tres equipos en serie')
-plt.legend()
+# Creo conjuntos de tiempo y espacio
+t = np.linspace(0, tau, nt)
+Z = np.linspace(0, L, nz)
+dz = Z[1] - Z[0]
+dt = t[1] - t[0]
+
+
+# Resolución de ecuaciones
+equip = 'SC'
+
+print(len(Y0in))
+
+sol0 = odeint(column, F0, t, args = (Y0in,), ml=1, mu=2)
+
+X0 = sol0[:, ::2]
+Y0 = sol0[:, 1::2]
+Y0out = Y0[:, -1]
+
+sol1 = odeint(column, F0, t, args = (Y0out,), ml=1, mu=2)
+
+X1 = sol1[:,::2]
+Y1 = sol1[:,1::2]
+Y1out = Y1[:,-1]
+
+
+plt.plot(t, Y0[:, -1])
+plt.plot(t, Y1[:, -1])
 plt.show()
-
-
-print(f'''
-Concentración final con un equipo: {sol0[-1][1]}
-Concentración final con tres equipos: {sol1[-1][1]}
-Mejora Porcentual con tres equipos: {(sol1[-1][1]-sol0[-1][1])/sol0[-1][1]}
-''')
-
-lista = []
-for i in range(0,10):
-    sol1 = odeint(batch, [x0, sol2[-1][1]], t)
-    sol2 = odeint(batch, [sol1[-1][0], y0], t)
-    lista.append(sol1[-1][1])
-
-
-plt.plot(t, sol0, label='sol0')
-plt.plot(t,sol1, label="sol1")
-plt.plot(t,sol2, label="sol2")
-plt.title('Dos equipos en serie')
-plt.legend()
-plt.show()
-
-plt.plot(lista)
-plt.show()
-
-
-print(f'''
-Concentración final con dos equipos: {sol1[-1][1]}
-Mejora Porcentual con dos equipos: {(sol1[-1][1]-sol0[-1][1])/sol0[-1][1]}
-''')
