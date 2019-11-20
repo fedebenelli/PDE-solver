@@ -1,0 +1,25 @@
+Parámetros:
+uz: 7.158789340273451e-05
+Re: 0.01764957490500729
+Pe: 0.4309811828442604
+Sc: 2092531366316326.5
+Sh: 11100.26236226296
+Dax: 4.3766715195850763e-07
+kL: 8.024505544031267e-14
+
+
+
+
+Masa de sólido por hora: 2.15 Kg/h
+Volumen de solvente por hora: 8.1 L/h
+Tiempo de residencia de líquido:  11.62
+Tiempo de residencia de sólido: 11.61
+
+Largo: 4.421 m
+Diámetro: 0.2 m
+Caudal: 8.1 L/h
+Sólidos tratados: 2.15 Kg/h
+
+Concentración final: 9.21
+Rendimiento: 0.577
+
