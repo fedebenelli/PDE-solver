@@ -57,7 +57,7 @@ K = 8.07*10**-9
 K = K*ap
 
 # Número de Biot CORREGIR ESTOOAOSOAOSFINOAISASHFOIAHSFOI!!I!!··!=·)=!)=!)=!!!
-Bi = K*a/Deff
+Bi = kL*a/Deff
 
 # Cálculo de tiempos de residencia para el líquido y el sólido
 resTime = A*L*eps/nu
