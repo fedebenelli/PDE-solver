@@ -7,7 +7,6 @@ from scipy.integrate import simps
 from scipy.integrate import odeint
 
 
-
 '__Definición de funciones__'
 
 def find_nearest(array, value):
@@ -63,6 +62,7 @@ def batch(X, t):
 
 def column(F, t):
     '''
+    Toma los valores iniciales de una matriz (F) y devuelve la discretizacion en el espacio del balance de masa en una columna
     '''
     x = F[::2]
     y = F[1::2]
@@ -73,14 +73,14 @@ def column(F, t):
     dxdt = dFdt[::2]
     dydt = dFdt[1::2]
     
-    '_________________________________________________________________________________________________________________________'
+    '____________________________________________________________________________________________'
 
      # A lo largo de todo el extractor la variación de concentración en el sólido en función del tiempo es igual a la
      # ecuación de transferencia de masa
 
     dxdt[:] = K * (eqX(y[:]) - x[:]) / (1-eps)
 
-    '_________________________________________________________________________________________________________________________'
+    '____________________________________________________________________________________________'
 
      # En z = 0 ingresa el solvente, por lo que se considera que no hay acumulación en ese punto
 
@@ -96,7 +96,7 @@ def column(F, t):
     dydt[-1] = (eps*Dax*(2*y[-2]-2*y[-1]) - uz *
                 (y[-1]-y[-2])/dz - K*(eqX(y[-1]) - x[-1]))/eps
 
-    '_________________________________________________________________________________________________________________________'
+    '____________________________________________________________________________________________'
 
     return dFdt
 
@@ -114,7 +114,7 @@ def countercurrent(F, t):
     dxdt = dFdt[::2]
     dydt = dFdt[1::2]
 
-    '_________________________________________________________________________________________________________________________'
+    '____________________________________________________________________________________________'
 
     # En el punto de ingreso de sólidos (z = L) no hay variación en función del tiempo
     dxdt[-1] = 0
@@ -126,7 +126,7 @@ def countercurrent(F, t):
 
     dxdt[0] = + (S/A *(x[1]-x[0])/dz +  K * (eqX(y[0])-x[0])) / (1-eps)
 
-    '_________________________________________________________________________________________________________________________'
+    '____________________________________________________________________________________________'
 
     # A lo largo del extractor se considera la ecuación general
     dydt[-1] =  ( -uz * (y[-1]-y[-2])/dz - K * (eqX(y[-1])-x[-1])) / (eps)
@@ -140,7 +140,7 @@ def countercurrent(F, t):
     # En el punto de ingreso de solvente (z = 0) se considera que no hay acumulación
     dydt[0] = 0
 
-    '_________________________________________________________________________________________________________________________'
+    '____________________________________________________________________________________________'
 
     return dFdt
 
@@ -190,8 +190,15 @@ Deq = 6/ap                      # Diámetro equivalente a esfera
 eps = 1.-densb/dens             # Porosidad del lecho
 
 # Propiedades estimadas
-viscH2O = e**(-52.843 + 3703.6/T + 5.866*math.log(T) - 5.98*10**(-29)*(T)**10)
-viscEtOH = e**(7.875+781.98/T -3.0418*math.log(T)) 
+viscH2O = e**(
+                - 52.843 + 3703.6/T
+                + 5.866*math.log(T)
+                - 5.98*10**(-29)*(T)**10
+            )
+viscEtOH = e**(
+                7.875+781.98/T
+                - 3.0418*math.log(T)
+                ) 
 visc = 0.01
 rad = math.pow(326.5*(3/(4*pi)), 1/3)*10**(-10)                     # radio molecular de van der waals
 Dab = kb*T/(6*pi*visc*rad)                                          # Ecuación de Einstein para difusividad
@@ -230,49 +237,49 @@ resTimeS = A*L*(1-eps)/S
 # %%
 # Print de datos
 print(f'''Propiedades:
-Porcentaje de ácido carnósico:  {porcentajeAC*100} %
-Densidad del sólido:            {dens}  Kg/m³
-Densidad del lecho:             {densb} Kg/m³
-Densidad de fase líquida:       {densL} Kg/m³
-Difusividad efectiva:           {Deff}  m²/s
-Factor de forma:                {phi}
-Longitud característica:        {a}     m
-Área específica:                {ap}    1/m
-Diámetro equivalente:           {Deq}   m
-Porosidad del lecho:            {eps}
+Porcentaje de ácido carnósico:              {porcentajeAC*100}\t %
+Densidad del sólido:                        {dens:.3f}\t Kg/m³
+Densidad del lecho:                         {densb}\t    Kg/m³
+Densidad de fase líquida:                   {densL:.3}\t Kg/m³
+Difusividad efectiva:                       {Deff:.3}\t m²/s
+Factor de forma:                            {phi:.3}
+Longitud característica:                    {a:.3}\tm
+Área específica:                            {ap}\t1/m
+Diámetro equivalente:                       {Deq:.3}\tm
+Porosidad del lecho:                        {eps:.3}
 ''')
 
 print(f'''Propiedades Estimadas:
-Viscosidad: {visc} Pa.s
-Radio van der waals: {rad} m
+Viscosidad                                  {visc:.3}        Pa.s
+Radio van der waals:                        {rad:.3}    m
 ''')
 
 print(f'''Parámetros de diseño:
-Largo total de equipo:      {L}     m
-Diámetro de contacto:       {Dc}    m
+Largo total de equipo:                      {L:.3}    m
+Diámetro de contacto:                       {Dc:.3}    m
 ''')
 
 print(f'''Parámetros de proceso:
-Flujo materia prima:{S*dens*3600} Kg/h
-Flujo de solvente: {nu*3600}m³/h
+Flujo materia prima:                        {S*dens*3600:.3} \t Kg/h
+Flujo de solvente:                          {nu*3600:.3} \t m³/h
 ''')
 
 print(f'''Parámetros:
-Velocidad lineal:   {uz}    m/s
-Reynolds:           {Re}
-Peclet:             {Pe}
-Schmidt:            {Sc}
-SherwoodL:          {ShL}    
-Dax:                {Dax}   m²/s
-Dab:                {Dab}   m²/s
-kL:                 {kL}    m/s
-Bi:                 {Bi(15)}''')
+Velocidad lineal:                           {uz:.3}    m/s
+Reynolds:                                   {Re:.3}
+Peclet:                                     {Pe:.3}
+Schmidt:                                    {Sc:.3}
+SherwoodL:                                  {ShL:.3}    
+Dax:                                        {Dax:.3}\tm²/s
+Dab:                                        {Dab:.3}\tm²/s
+kL:                                         {kL:.3}\tm/s
+Bi:                                         {Bi(15):.3}''')
 
 print('\n\n')
-print(f'Masa de sólido por hora: {round(S*3600*dens,2)} Kg/h')
-print(f'Volumen de solvente por hora: {round(nu*3600*1000,2)} L/h')
-print(f'Tiempo de residencia de líquido:  {round(resTime/3600,2)}')
-print(f'Tiempo de residencia de sólido: {round(resTimeS/3600,2)}')
+print(f'Masa de sólido por hora:            {round(S*3600*dens,2):.3f}    Kg/h')
+print(f'Volumen de solvente por hora:       {round(nu*3600*1000,2):.3f}    L/h')
+print(f'Tiempo de residencia de líquido:    {round(resTime/3600,2):.3f}    h')
+print(f'Tiempo de residencia de sólido:     {round(resTimeS/3600,2):.3f}    h')
 print('\n\n')
 
 
@@ -301,7 +308,7 @@ plt.show()
 
 # Defino K como el que dio el mínimo error cuadrado
 K = float(mat_Ka[np.where(mat_error == mat_error.min())])
-print(f'Mínimo error porcentual: {mat_error.min()} con Ka = {K}')
+print(f'\nMínimo error porcentual: {mat_error.min()} con Ka = {K}\n')
 
 # Grafico
 plt.plot(t/60, sol[:,1], label="Simulación",color='grey')
@@ -331,9 +338,9 @@ for eps in epsilons:
     rendimientos.append(round(rendimiento*100,2))
 
     print(f'''
-    Rendimiento a eps:{eps} -> {1-sol[-1][0]/sol[0][0]}
-    Concentración final: {sol[-1][-1]}
-    Volumen: {W*t[-1]/((1-eps)*dens)}
+    Rendimiento a epsilon: {eps:.3f} -> {1-sol[-1][0]/sol[0][0]:.3f}
+    Concentración final:   {sol[-1][-1]:.3f} \t Kg/m³
+    Volumen:               {W*t[-1]/((1-eps)*dens):.3f} \t m³
     ''')
     soluciones.append([eps,sol])
 
@@ -345,10 +352,6 @@ plt.legend(loc='upper center', bbox_to_anchor=(0.25, +0.97), shadow=False, ncol=
 plt.xlabel('Tiempo (min)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.show()
-
-# rendimientos = []
-# for sol in soluciones:
-
 
 plt.plot(np.round(epsilons,3),rendimientos, color='grey')
 plt.xlabel('Porosidad de lecho')
@@ -403,16 +406,18 @@ plt.legend()
 plt.show()
 
 print(f'''
-Concentración final con un equipo: {sol0[-1][1]}
-Concentración final con tres equipos: {conc_final_3}
-Rendimiento con tres equipos: {rendimiento_3}
-Rendimiento 1er equipo: {rendimiento_3_1}
-Rendimiento 2do equipo: {rendimiento_3_2}
-Rendimiento 3er equipo: {rendimiento_3_3}
-Volumen con un equipo: {V_1}
-Volumen individual tres equipos: {V_3}
-Mejora Porcentual con tres equipos: {100*(sol3[-1][1]-sol0[-1][1])/sol0[-1][1]}
+Concentración final con un equipo:    {sol0[-1][1]:.3f} \t Kg/m³
+Concentración final con tres equipos: {conc_final_3:.3f} \t Kg/m³
+Rendimiento con tres equipos:         {rendimiento_3:.3f} \t %
+Rendimiento 1er equipo:               {rendimiento_3_1:.3f} \t %
+Rendimiento 2do equipo:               {rendimiento_3_2:.3f} \t %
+Rendimiento 3er equipo:               {rendimiento_3_3:.3f} \t %
+Volumen con un equipo:                {V_1:.3f} \t m³
+Volumen individual tres equipos:      {V_3:.3f} \t m³
+Mejora Porcentual con tres equipos:   {100*(sol3[-1][1]-sol0[-1][1])/sol0[-1][1]:.3f} \t m³
 ''')
+
+
 
 
 
@@ -453,13 +458,11 @@ plt.show()
 # plt.show()
 
 print(f'''
-Concentración final con dos equipos: {conc_final_2}
-Rendimiento con dos equipos: {rendimiento_2}
-Rendimiento 1er equipo: {rendimiento_2_1}
-Rendimiento 2do equipo: {rendimiento_2_2}
-Volumen con un equipo: {V_1}
-Volumen individual dos equipos: {V_2}
-Mejora Porcentual con dos equipos: {100*(sol2[-1][1]-sol0[-1][1])/sol0[-1][1]}
+Concentración final con dos equipos:     {conc_final_2:.3f}    Kg/m³
+Rendimiento con dos equipos:             {rendimiento_2:.3f}   %
+Rendimiento 1er equipo:                  {rendimiento_2_1:.3f}   %
+Rendimiento 2do equipo:                  {rendimiento_2_2:.3f}   %
+Volumen con un equipo:                   {V_1:.3f}    m³
+Volumen individual dos equipos:          {V_2:.3f}    m³
+Mejora Porcentual con dos equipos:       {100*(sol2[-1][1]-sol0[-1][1])/sol0[-1][1]:.3f}    %
 ''')
-
-# %%
