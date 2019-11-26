@@ -176,8 +176,10 @@ kb = 1.38*10**-23 # Constante de Boltzmann
 e = math.e
 pi = math.pi
 
+
 # Estimación viscosidades
 T = 25 + 273
+
 
 # Definición de propiedades
 porcentajeAC = 0.06             # Porcentaje de Ácido Carnósico
@@ -190,6 +192,7 @@ a = 0.000706498099              # Longitud característica
 ap = 3362                       # Área equivalente
 Deq = 6/ap                      # Diámetro equivalente a esfera
 eps = 1.-densb/dens             # Porosidad del lecho
+
 
 # Propiedades estimadas
 viscH2O = e**(
@@ -205,17 +208,18 @@ visc = 0.01
 rad = math.pow(326.5*(3/(4*pi)), 1/3)*10**(-10)                     # radio molecular de van der waals
 Dab = kb*T/(6*pi*visc*rad)                                          # Ecuación de Einstein para difusividad
 
+
 # Definición de parámetros de diseño
 L = 4.421                                                           # Longitud del equipo
 Dc = 0.3                                                            # Diámetro del equipo
 A = math.pi*(Dc/2)**2                                               # Área del equipo
 
+
 # Definición de parámetros de proceso
 W = 1000/(3600*7*5*4)                                               # Materia prima a tratar, por hora (7 horas, 5 días, 4  semanas)
-S = 1.072*10**-6                                                    # Flujo volumétrico de sólidos (m³/s)
-nu = A*L*eps/(4*3600)                                               # Flujo volumétrico de solvente (m³/s)
-tau = 8*3600                                                        # Tiempo máximo a calcular en la simulación
-
+L = 2 * (W*3600*7)/densb/A
+nu = A*L*eps/(5*3600)                                               # Flujo volumétrico de solvente (m³/s)
+tau = 6*3600                                                        # Tiempo máximo a calcular en la simulación
 
 
 # Estimación de números adimensionales y coeficientes
@@ -232,9 +236,8 @@ K = 8.07*10**-9
 K = K*ap
 
 
-# Cálculo de tiempos de residencia para el líquido y el sólido
+# Cálculo de tiempo de residencia para el líquido 
 resTime = A*L*eps/nu
-resTimeS = A*L*(1-eps)/S
 
 # %%
 # Print de datos
@@ -262,7 +265,6 @@ Diámetro de contacto:                       {Dc:.3}    m
 ''')
 
 print(f'''Parámetros de proceso:
-Flujo materia prima:                        {S*dens*3600:.3} \t Kg/h
 Flujo de solvente:                          {nu*3600:.3} \t m³/h
 ''')
 
@@ -278,15 +280,9 @@ kL:                                         {kL:.3}\tm/s
 Bi:                                         {Bi(15):.3}''')
 
 print('\n\n')
-print(f'Masa de sólido por hora:            {round(S*3600*dens,2):.3f}    Kg/h')
 print(f'Volumen de solvente por hora:       {round(nu*3600*1000,2):.3f}    L/h')
 print(f'Tiempo de residencia de líquido:    {round(resTime/3600,2):.3f}    h')
-print(f'Tiempo de residencia de sólido:     {round(resTimeS/3600,2):.3f}    h')
 print('\n\n')
-
-
-
-
 
 
 
@@ -294,45 +290,56 @@ print('\n\n')
 '____Cálculos____'
 
 
+
 # Número de puntos
-nz = 100
+nz = 300
 nt = tau
 
 
+# Creo rangos de solución
+Z = np.linspace(0, L, nz)
+t = np.linspace(0*3600, tau, nt)
+# Calculo diferenciales
+dz = Z[1] - Z[0]
+dt = t[1] - t[0]
+# Inicio array de condiciones inciales
+F0 = np.ones(2*nz)
 # Condiciones iniciales
 eqLiq = 16.03
-F0 = np.ones(2*nz)
-
 F0[::2] = porcentajeAC*dens
 F0[1::2] = eqLiq
+# Calculo una solución inicial que utilizo para iniciar las iteraciones
+sol = odeint(column, F0, t, ml=1, mu=2)
+rendimientos = []
+X = sol[:, ::2]
+Y = sol[:, 1::2]
 
-# Creo conjuntos de tiempo y espacio
-t = np.linspace(0, tau, nt)
-Z = np.linspace(0, L, nz)
-dz = Z[1] - Z[0]
-dt = t[1] - t[0]
+for i in range(0,7):
 
-# Resolución de ecuaciones para primer corrida
-equip = 'SC'
-sol0 = odeint(column, F0, t, ml=1, mu=2)
-
-
-
-# Resolución para dos columnas
-F1 = np.ones(4*nz)
-F1[::2] = np.append(sol0[-1,::2],F0[::2])
-F1[1::2] = np.append(sol0[-1,1::2],F0[1::2])
-
-# Creo conjuntos de tiempo y espacio
-t = np.linspace(0, tau, nt)
-Z = np.linspace(0, 2*L, 2*nz)
-dz = Z[1] - Z[0]
-dt = t[1] - t[0]
-
-sol = odeint(column, F1, t, ml=1, mu=2)
+    # Condicion incial de primer columna
+    # Es igual a la de la segunda columna a tiempo final
+    F0[0:300:2] = sol[-1, 300:600:2]
+    F0[1:300:2] = sol[-1, 301:600:2]
+    # Condicion inicial de segunda columna
+    F0[300:600:2] = porcentajeAC*dens
+    F0[301:600:2] = eqLiq
+    # Solución de ecuación 
+    sol = odeint(column,F0, t, ml=1, mu=2)
+    # Calculo el rendimiento 
+    rendimiento_solido = 1 - (sol[-1,:300:2].mean()/(porcentajeAC*dens))
+    rendimientos.append(rendimiento_solido)
 
 
+# Separo los resultados en una variable para
+# las concentraciones en el sólido y otra para
+# las concentraciones en el líquido
+plt.plot(rendimientos)
+plt.show()
 
+X = sol[:, ::2]
+Y = sol[:, 1::2]
+# Calculo del rendimiento
+rendimiento_solido = 1 - (X[-1,:150].mean()/(porcentajeAC*dens))
 
 
 # %%
@@ -340,91 +347,60 @@ sol = odeint(column, F1, t, ml=1, mu=2)
 
 
 # Definición de un tiempo inicial para analizar y el máximo índice de z
-tiniPos = find_nearest_pos(t, resTime)
-zEnd = int(2*nz)
+# El tiempo de residencia se divide por dos debido a que se empieza a tomar solvente
+# tras pasar el tiempo de residencia de una sola columna
+tiniPos = find_nearest_pos(t, resTime/2)
+zEnd = int(nz)
+zHalf = int(nz/2)
 
 
-# Cambio conjunto de tiempo a horas
-t = t/3600
-
-
-# Separo los resultados en una variable para
-# las concentraciones en el sólido y otra para las concentraciones en el líquido
-X = sol[:, ::2]
-Y = sol[:, 1::2]
-
-# Concentración a la salida del extractor
-Yin = Y[:, 1]
+# Concentracion a la salida del extractor
 Yout = Y[:, -1]
-Xin = X[:, -1]
-Xout = X[:, 1]
 
 
 # Obtengo tiempos a los cuales deseo extraerles información
-tiempos = [0]
-for i in range(tiniPos, int(nt), int((nt-tiniPos)/9)):
-    print(i)
+tiempos = [0,nt-1]
+for i in range(tiniPos, int(nt), int((nt)/10)):
     tiempos.append(i)
+
 
 # Grafico concentraciones de fase líquida
 for i in tiempos:
-    plt.plot(Z[:zEnd], Y[i, :zEnd],
-            label=f'tiempo: {round(t[i], 3)} horas')
-
+    if i == 0:
+        plt.plot(Z[:zHalf], Y[i, :zHalf], label=f'tiempo: {round(t[i]/3600, 1)} horas')
+    else:
+        plt.plot(Z[:zEnd], Y[i, :zEnd], label=f'tiempo: {round(t[i]/3600, 1)} horas')
 plt.title('Fase Líquida a distintos tiempos')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
+plt.axvline(x=Z[zHalf], color="black", linestyle=':')
 plt.legend()
 plt.show()
 
 
 # Grafico concentraciones de fase sólida
 for i in tiempos:
-    plt.plot(Z[:zEnd], X[i, :zEnd],
-            label=f'tiempo: {round(t[i], 3)} horas')
-
+    plt.plot(Z[:zEnd], X[i, :zEnd], label=f'tiempo: {round(t[i]/3600, 1)} horas')
 plt.title('Fase Sólida a distintos tiempos')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
+plt.axvline(x=Z[zHalf], color="black", linestyle=':')
 plt.legend()
 plt.show()
 
 
 # Grafico concentración a la salida del extractor
-plt.plot(t[tiniPos:], Yout[tiniPos:], label='Fase líquida')
+plt.plot(t[tiniPos:]/3600, Yout[tiniPos:], label='Fase líquida')
 plt.title('Concentración a la salida')
-plt.xlabel('Tiempo (s)')
+plt.xlabel('Tiempo (h)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.legend()
 plt.show()
 
 
-# Calculo y grafico rendimiento en función del tiempo
-rend = 0
-rendimientoL = []
-rendimientoS = []
-
-if equip == 'SC':
-    for i in range(0,tiniPos):
-        rendimientoL.append(0)
-
-    for Cout in Yout[tiniPos:]:
-        rend += Cout*nu*dt/(A*L*(1-eps)*X[0,:].mean())  # Rendimiento calculado en función de Xini promedio
-        rendimientoL.append(rend)
-    plt.plot(t[:], rendimientoL, label='Rendimiento')
-    concentracion_promedio = Yout[tiniPos:].mean()
-
-
-print(f'Concentración promedio: {concentracion_promedio}')   
-plt.legend()
-plt.title('Rendimiento')
-plt.xlabel('Tiempo (s)')
-plt.ylabel('Rendimiento')
-plt.show()
-rendimiento = rendimientoL[-1]
-
-
+concentracion_promedio = Yout[tiniPos:].mean()
 print(f'''
+Concentración promedio: {round(concentracion_promedio,2)}
 Concentración final: {round(Yout[-1],2)}
-Rendimiento: {round(rendimiento,3)}
+rendimiento_solido: {rendimiento_solido}
 ''')
