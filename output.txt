@@ -1,25 +1,106 @@
-Parámetros:
-uz: 7.158789340273451e-05
-Re: 0.01764957490500729
-Pe: 0.4309811828442604
-Sc: 2092531366316326.5
-Sh: 11100.26236226296
-Dax: 4.3766715195850763e-07
-kL: 8.024505544031267e-14
+
+Mínimo error porcentual: 9.52% con Ka = 0.00030594199999999997
 
 
+rendimiento_l = 0.5393381074640796
+rendimiento_s = 0.5393381074640782
+Ka: 0.00030594199999999997 s⁻¹
 
 
-Masa de sólido por hora: 2.15 Kg/h
-Volumen de solvente por hora: 8.1 L/h
-Tiempo de residencia de líquido:  11.62
-Tiempo de residencia de sólido: 11.61
+    Rendimiento a epsilon: 0.677 -> 0.460
+    Concentración final:   7.330 	 Kg/m³
+    Volumen:               35000.000 	 m³
+    
 
-Largo: 4.421 m
-Diámetro: 0.2 m
-Caudal: 8.1 L/h
-Sólidos tratados: 2.15 Kg/h
+    Rendimiento a epsilon: 0.737 -> 0.485
+    Concentración final:   5.786 	 Kg/m³
+    Volumen:               43010.122 	 m³
+    
 
-Concentración final: 9.21
-Rendimiento: 0.577
+    Rendimiento a epsilon: 0.798 -> 0.506
+    Concentración final:   4.301 	 Kg/m³
+    Volumen:               55774.773 	 m³
+    
+
+    Rendimiento a epsilon: 0.858 -> 0.523
+    Concentración final:   2.907 	 Kg/m³
+    Volumen:               79313.683 	 m³
+    
+
+    Rendimiento a epsilon: 0.918 -> 0.539
+    Concentración final:   1.618 	 Kg/m³
+    Volumen:               137229.232 	 m³
+    
+
+Concentración final con un equipo:    5.796 	 Kg/m³
+Concentración final con tres equipos: 6.809 	 Kg/m³
+Rendimiento con tres equipos:         57.012 	 %
+Rendimiento 1er equipo:               7.468 	 %
+Rendimiento 2do equipo:               16.619 	 %
+Rendimiento 3er equipo:               53.542 	 %
+Volumen:                              1.704 	 m³
+Mejora Porcentual con tres equipos:   17.473 	 m³
+
+
+Concentración final con dos equipos:     6.562    Kg/m³
+Rendimiento con dos equipos:             54.942   %
+Rendimiento 1er equipo:                  15.399   %
+Rendimiento 2do equipo:                  46.741   %
+Volumen con un equipo:                   42942.836    m³
+Volumen individual dos equipos:          21469.271    m³
+Mejora Porcentual con dos equipos:       13.209   %
+
+
+Materia prima diaria: 250.0 Kg
+Parámetros de diseño
+Largo columna:        7.07355302630646
+Diámetro columna:     0.5
+Flujo de solvente:    235.1789107597433
+
+Re:  0.17217618843764468
+Dab: 5.107354877977205e-11
+Sc:  209253.13663163266
+ShL: 59.71725477638136
+kL:  4.317028070043808e-06
+Pe:  0.6680135214004577
+Dax: 1.312331065310303e-06
+Bi:  1407.6794422225794
+
+
+Concentración Promedio: 8.644826576199575
+rendimiento_liquido:    0.5421549061059993
+rendimiento_solido:     0.5712390008739978
+
+0
+5760
+11520
+17280
+23040
+
+Concentración Promedio: 9.740293212709302
+rendimiento_liquido: 0.6108564128654652
+rendimiento_solido: 0.5736309144123184
+
+
+Materia prima diaria: 0.32012374703565405 m³
+Parámetros de diseño:
+Largo equipo:         3 m
+Diámetro de contacto: 0.3 m
+Flujo de solvente:    20.0 L/h
+Tiempo Residencia L:  8.131874207761287 h
+Tiempo Residencia S:  3.705068711937659 h
+
+Re:  0.056315943231157364
+Dab: 5.107354877977205e-11
+Sc:  209253.13663163266
+ShL: 40.11325555125268
+kL:  2.8998327341746545e-06
+Pe:  0.49642074390871493
+Dax: 3.6841026488167173e-07
+Bi:  945.5659911287842
+
+
+Concentración final: 12.67
+rendimiento_solido: 0.5541599087513426
+rendimiento_liquido: 0.5677032232591245
 

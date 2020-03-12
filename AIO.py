@@ -110,7 +110,6 @@ def column(F, t):
 
     return dFdt
 
-
 def countercurrent(F, t):
     '''
     '''
@@ -192,7 +191,7 @@ def Bi_f(kL, a, Deff):
     return Bi
 
 def Pe_f(Re, eps):
-    Pe = 0.2/eps + 0.011/eps + math.pow(eps*Re, 0.48)
+    Pe = 0.2/eps + 0.011/eps * math.pow(eps*Re, 0.48)
     return Pe
 
 def kL_f(Sh, Dab, a):
@@ -293,6 +292,7 @@ for K in range(50000,200000,int((200000-50000)/25)):
 
 # Graficación del error porcenctual en función de cada Ka
 plt.plot(mat_Ka,mat_error)
+plt.savefig('./figuras/error_ka.png')
 plt.show()
 
 # Defino K como el que dio el mínimo error cuadrado y vuelvo a calcular
@@ -311,6 +311,7 @@ marker='x',linestyle=' ', label='Datos Experimentales', color='black')
 plt.xlabel('Tiempo (min)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.legend()
+plt.savefig('./figuras/datos_experimentales.png')
 plt.show()
 
 rendimiento_solido = 1 - sol[-1,0]/(porcentajeAC*dens)
@@ -367,6 +368,7 @@ plt.plot(np.round(epsilons,3),rendimientos, color='grey')
 plt.xlabel('Porosidad de lecho')
 plt.ylabel('Rendimiento')
 plt.title("Rendimiento extractor batch a diferentes porosidades de lecho")
+plt.savefig('./figuras/rendimiento_extractor_batch_variando_epsilons.png')
 plt.show()
 
 
@@ -416,6 +418,7 @@ plt.title('Tres equipos en serie')
 plt.xlabel('Tiempo (min)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.legend()
+plt.savefig('./figuras/batch_serie_3.png')
 plt.show()
 
 print(f'''
@@ -464,9 +467,11 @@ plt.title('Dos equipos en serie')
 plt.xlabel('Tiempo (min)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.legend()
+plt.savefig('./figuras/batch_serie_2.png')
 plt.show()
 
 plt.plot(convergencia)
+plt.savefig('./figuras/batch_serie_2_convergencia.png')
 plt.show()
 
 print(f'''
@@ -580,6 +585,7 @@ plt.title('Fase Líquida a distintos tiempos')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.legend()
+plt.savefig('./figuras/columna_simple_concentraciones_liquido.png')
 plt.show()
 
 
@@ -592,6 +598,7 @@ plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.ylim(ymin=0)
 plt.legend()
+plt.savefig('./figuras/columna_simple_concentraciones_solido.png')
 plt.show()
 
 
@@ -604,6 +611,7 @@ plt.ylabel('Concentración (Kg/m³)')
 #plt.axvline(x=resTimeL/3600, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.ylim(ymin=0)
 plt.legend()
+plt.savefig('./figuras/columna_simple_salida.png')
 plt.show()
 
 concentracion_promedio = Yout[resTimeLPos:].mean()
@@ -617,11 +625,7 @@ rendimiento_solido:     {rendimiento_solido}
 ''')
 
 
-
-
 ## Cálculos en dos columnas en serie CC
-
-
 
 
 '____Cálculos____'
@@ -678,6 +682,7 @@ for i in range(0,10):
 # las concentraciones en el líquido
 plt.plot(rendimientos)
 plt.title("Rendimientos")
+plt.savefig('./figuras/columnas_contraccoriente_convergencia.png')
 plt.show()
 X = sol[:, ::2]
 Y = sol[:, 1::2]
@@ -708,6 +713,7 @@ plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.axvline(x=Lc, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.legend()
+plt.savefig('./figuras/columnas_contracorriente_concentracion_liquida.png')
 plt.show()
 
 
@@ -721,6 +727,7 @@ plt.ylabel('Concentración (Kg/m³)')
 plt.axvline(x=Lc, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.ylim(ymin=0)
 plt.legend()
+plt.savefig('./figuras/columnas_contracorriente_concentracion_solida.png')
 plt.show()
 
 
@@ -860,6 +867,7 @@ plt.title('Fase Líquida a distintos tiempos')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.legend()
+plt.savefig('./figuras/contracorriente_concentracion_liquida.png')
 plt.show()
 
 
@@ -872,6 +880,7 @@ plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.ylim(ymin=0)
 plt.legend()
+plt.savefig('./figuras/contracorriente_concentracion_solida.png')
 plt.show()
 
 
@@ -883,6 +892,7 @@ plt.ylabel('Concentración (Kg/m³)')
 plt.axvline(x=resTimeL/3600, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.ylim(ymin=0)
 plt.legend()
+plt.savefig('./figuras/contracorriente_concentracion_salida.png')
 plt.show()
 
 
