@@ -187,7 +187,7 @@ def Dax_f(Deq, L, A, eps, Pe):
     return Dax
 
 def Bi_f(kL, a, Deff):
-    Bi = kL*a/Deff
+    Bi = m(1.9)*kL*a/Deff
     return Bi
 
 def Pe_f(Re, eps):
@@ -197,6 +197,11 @@ def Pe_f(Re, eps):
 def kL_f(Sh, Dab, a):
     kL = Sh*Dab/a
     return kL
+
+def Shod_f(Bi, phi):
+    exp = 1.0189+0.02736*phi
+    Shod = 2*(2.0654+0.41309*phi)*( 1 + (1.9957 + 0.3238*phi)/(Bi**exp) )**(-1)
+    return Shod
 
 def error_porcentual(modelo):
 
@@ -217,14 +222,13 @@ def error_porcentual(modelo):
 
 '__Fuente de gráficos__'
 plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['font.size'] = '9'
-
+plt.rcParams['font.size'] = '11'
+plt.rcParams['legend.title_fontsize'] = '5'
 
 '__Datos Cinéticos Experimentales'
 tiempo_experimental = [1,5,10,15,30,46,80,108,142,168,192,1263,1608]                             # min
 concentracion_experimental = [0.11,0.21,0.3,0.46,0.72,0.93,1.3,1.37,1.59,1.62,1.58,1.64,1.76]    # g/L
 datos_experimentales = [[tiempo_experimental],[concentracion_experimental]]
-
 
 # Temperatura de trabajo
 T = 25 + 273
@@ -234,7 +238,7 @@ porcentajeAC = 0.06                                                 # Porcentaje
 dens = 557.82                                                       # Densidad del sólido
 densb = 180                                                         # Densidad del lecho
 densL = 935.69                                                      # Densidad de fase líquida
-Deff = (1.3*(10**-10))/60                                           # Difusividad efectiva en sólido
+Deff = (9.90037*(10**-10))/60                                       # Difusividad efectiva en sólido
 phi = 2.012453362                                                   # Factor de forma
 a = 0.000706498099                                                  # Longitud característica
 ap = 3362                                                           # Área equivalente
@@ -254,6 +258,52 @@ viscEtOH = e**(
 visc = 0.01
 rad = math.pow(326.5*(3/(4*pi)), 1/3)*10**(-10)                     # radio molecular de van der waals de la molécula
 
+eps = 0.9177
+L = 30/3600/1000 
+A = pi*(0.1**2)
+
+""" Comparación de Shod a distintos L y A
+
+Shod_lista=[]
+
+for L in range(1,40,2):
+    L = L/3600/1000
+
+    for A in range(1,200):
+
+        print(f"L: {L}, A: {A}")
+        A = pi*((A/100)**2)
+
+        Dab = Dab_f(T, visc, rad)
+        Re = Re_f(L, A, Deq, visc, eps)
+        Sc = Sc_f(visc, densL, Dab)
+        Sh = Sh_f(Re, Sc)
+        kL = kL_f(Sh, Dab, a)
+        Bi = Bi_f(kL, a, Deff)
+        Shod = Shod_f(Bi, phi)
+        Shod_lista.append(Shod)
+
+plt.plot(Shod_lista)
+plt.show()
+"""
+Shod = 6 
+K = Shod*Deff/(2*a) * ap 
+x0 = porcentajeAC*dens
+y0 = 0
+t = np.linspace(0,tiempo_experimental[-1]*60,10000)
+
+sol = odeint(batch, [x0,y0], t)
+
+# Grafico
+plt.plot(t/60, sol[:,1], label="Simulación",color='grey')
+plt.plot(tiempo_experimental, concentracion_experimental,
+marker='x',linestyle=' ', label='Datos Experimentales', color='black')
+plt.xlabel('Tiempo (min)')
+plt.ylabel('Concentración (Kg/m³)')
+plt.legend()
+plt.savefig('./figuras/datos_experimentales.png', dpi=100)
+plt.show()
+print('Error porcentual: ',error_porcentual(sol))
 
 # # Cálculos
 
@@ -261,9 +311,7 @@ rad = math.pow(326.5*(3/(4*pi)), 1/3)*10**(-10)                     # radio mole
 
 # #### __Ajuste de K y comparación de datos experimentales con modelo__
 
-
-
-'__Ajuste de K y comparación de datos experimentales con modelo__'
+"""'__Ajuste de K y comparación de datos experimentales con modelo__'
 
 # Valor de la porosidad de lecho en las condiciones experimentales
 eps = 0.9177
@@ -321,7 +369,7 @@ rendimiento_l = {rendimiento_liquido}
 rendimiento_s = {rendimiento_solido}
 Ka: {K} s⁻¹
 ''')
-
+"""
 ###########################################################################
 # #### __Calculo de batchs__
 ###########################################################################
@@ -361,6 +409,7 @@ plt.title("Extractor batch a diferentes porosidades de lecho")
 plt.legend(loc='upper center', bbox_to_anchor=(0.25, +0.97), shadow=False, ncol=2)
 plt.xlabel('Tiempo (min)')
 plt.ylabel('Concentración (Kg/m³)')
+plt.savefig('./figuras/rendimientos_eps.png', dpi=100)
 plt.show()
 
 
@@ -368,7 +417,7 @@ plt.plot(np.round(epsilons,3),rendimientos, color='grey')
 plt.xlabel('Porosidad de lecho')
 plt.ylabel('Rendimiento')
 plt.title("Rendimiento extractor batch a diferentes porosidades de lecho")
-plt.savefig('./figuras/rendimiento_extractor_batch_variando_epsilons.png')
+plt.savefig('./figuras/rendimiento_extractor_batch_variando_epsilons.png', dpi=100)
 plt.show()
 
 
@@ -400,7 +449,8 @@ for i in range(0,10):
     sol3 = odeint(batch, [x0, sol2[-1][1]], t3)
     lista.append(sol3[-1][1])
 
-plt.plot(t[:t1.shape[0]]/60, sol0[:t1.shape[0], -1], ls='solid', color='grey', label='Único equipo')
+plt.plot(t1/60, sol0[:t1.shape[0],-1], color='grey',label = 'Único equipo')
+
 plt.plot(t1/60, sol1[:, -1], ls='dashed', color='grey', label='Primer equipo')
 plt.plot(t2/60, sol2[:, -1], ls='dashdot', color='grey', label="Segundo equipo")
 plt.plot(t3/60, sol3[:, -1], ls='dotted', color='grey', label="Tercer equipo")
@@ -417,18 +467,22 @@ V = W/((1-eps)*dens)
 plt.title('Tres equipos en serie')
 plt.xlabel('Tiempo (min)')
 plt.ylabel('Concentración (Kg/m³)')
-plt.legend()
-plt.savefig('./figuras/batch_serie_3.png')
+plt.axvline(t1[-1]/60, ls='dashed',color='black')
+plt.axvline(t2[-1]/60, ls='dashed',color='black')
+plt.legend(loc='lower center', bbox_to_anchor=(0.82, +0.0), shadow=False, ncol=1)
+plt.savefig('./figuras/batch_serie_3.png', dpi=100)
 plt.show()
 
+# Concentración final con un equipo, {tau/3600:.3f} hs: {sol0[-1][1]:.3f} \t Kg/m³
 print(f'''
-Concentración final con un equipo:    {sol0[-1][1]:.3f} \t Kg/m³
+Concentración final con un equipo, {t1[-1]/3600:.3f} hs: {sol0[t1.shape[0],1]}
 Concentración final con tres equipos: {conc_final_3:.3f} \t Kg/m³
 Rendimiento con tres equipos:         {rendimiento_3:.3f} \t %
 Rendimiento 1er equipo:               {rendimiento_3_1:.3f} \t %
 Rendimiento 2do equipo:               {rendimiento_3_2:.3f} \t %
 Rendimiento 3er equipo:               {rendimiento_3_3:.3f} \t %
 Volumen:                              {V:.3f} \t m³
+Volumen 3:                            {V/3:.3f} 't m^3'
 Mejora Porcentual con tres equipos:   {100*(sol3[-1][1]-sol0[-1][1])/sol0[-1][1]:.3f} \t m³
 ''')
 
@@ -449,6 +503,10 @@ for i in range(0,10):
     sol2 = odeint(batch, [x0, sol1[-1][-1]], t2)
     convergencia.append(sol1[-1][1])
 
+plt.plot(convergencia)
+plt.savefig('./figuras/batch_serie_2_convergencia.png', dpi=100)
+plt.show()
+
 conc_final_2 = sol2[-1][-1]
 rendimiento_2 = 100*(1 - sol1[-1][0]/sol2[0][0])
 
@@ -466,13 +524,11 @@ plt.plot(t2/60, sol2[:,-1], ls='--', color='grey', label = 'Segundo equipo')
 plt.title('Dos equipos en serie')
 plt.xlabel('Tiempo (min)')
 plt.ylabel('Concentración (Kg/m³)')
+plt.axvline(t1[-1]/60, ls='dashed',color='black')
 plt.legend()
-plt.savefig('./figuras/batch_serie_2.png')
+plt.savefig('./figuras/batch_serie_2.png', dpi=100)
 plt.show()
 
-plt.plot(convergencia)
-plt.savefig('./figuras/batch_serie_2_convergencia.png')
-plt.show()
 
 print(f'''
 Concentración final con dos equipos:     {conc_final_2:.3f}    Kg/m³
@@ -489,15 +545,13 @@ Mejora Porcentual con dos equipos:       {100*(sol2[-1][1]-sol0[-1][1])/sol0[-1]
 # ## __Extracción en columna__
 ###########################################################################
 
-
-
 '__Definición de parámetros__'
 W   = 5000/(4*5)          # Kg/día Una tonelada mensual, dividida en 4 semanas y 5 días
 Dc  = 0.5                 # m
 A   = pi*(Dc**2)/4 
 Lc  = (W/densb)/A         # Calculo del volumen de la columna en función del volumen de materia prima a tratar
 eps = 1 - densb/dens      # Asumo porosidad de lecho como la máxima alcanzable
-L   = A*Lc*eps/(4*3600)   # Caudal de solvente, en m³/s
+L   = A*Lc*eps/(3*3600)   # Caudal de solvente, en m³/s
 tau = 8*3600
 resTimeL = A*Lc*eps/L
 
@@ -508,7 +562,9 @@ ShL = Sh_f(Re, Sc)
 kL = kL_f(ShL, Dab, a)
 Pe = Pe_f(Re, eps)
 Dax = Dax_f(Deq, L, A, eps, Pe)
-Bi = kL*a/Deff
+Bi = Bi_f(kL, a, Deff)
+Shod = Shod_f(Bi, phi)
+K = Shod*Deff/(2*a) * ap 
 
 print(f'''
 Materia prima diaria: {W} Kg
@@ -517,20 +573,19 @@ Largo columna:        {Lc}
 Diámetro columna:     {Dc}
 Flujo de solvente:    {L*1000*3600}
 
-Re:  {Re}
-Dab: {Dab}
-Sc:  {Sc}
-ShL: {ShL}
-kL:  {kL}
-Pe:  {Pe}
-Dax: {Dax}
-Bi:  {Bi}
+Re:   {Re}
+Dab:  {Dab}
+Sc:   {Sc}
+ShL:  {ShL}
+kL:   {kL}
+Pe:   {Pe}
+Dax:  {Dax}
+Bi:   {Bi}
+Shod: {Shod}
+Ka:   {K}
 ''')
 
-
 # ### Cálculos
-
-
 
 '___Cálculos____'
 
@@ -561,7 +616,6 @@ sol = odeint(column, F0, t, ml=1, mu=2)
 X = sol[:, 0::2]
 Y = sol[:, 1::2]
 
-
 # ### Gráficos columna simple
 
 '__Obtención de gráficos__'
@@ -572,20 +626,19 @@ Yout = Y[:, -1]
 resTimeLPos = find_nearest_pos(t, resTimeL)
 
 # Obtengo tiempos a los cuales deseo extraerles información
-tiempos = [nt-1]
-for i in range(resTimeLPos, int(nt), int(nt/5)):
+tiempos = []
+for i in range(resTimeLPos, int(nt), int((nt-resTimeLPos)/4)):
     tiempos.append(i)
 
 # Grafico concentraciones de fase líquida
 for i in tiempos:
     plt.plot(Z[:], Y[i, :], label=f'tiempo: {round(t[i]/3600, 1)} horas')
 
-
 plt.title('Fase Líquida a distintos tiempos')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.legend()
-plt.savefig('./figuras/columna_simple_concentraciones_liquido.png')
+plt.savefig('./figuras/columna_simple_concentraciones_liquido.png', dpi=100)
 plt.show()
 
 
@@ -598,7 +651,7 @@ plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.ylim(ymin=0)
 plt.legend()
-plt.savefig('./figuras/columna_simple_concentraciones_solido.png')
+plt.savefig('./figuras/columna_simple_concentraciones_solido.png', dpi=100)
 plt.show()
 
 
@@ -608,10 +661,10 @@ plt.plot(t[resTimeLPos:]/3600, Yout[resTimeLPos:], label='Fase líquida')
 plt.title('Concentración a la salida')
 plt.xlabel('Tiempo (h)')
 plt.ylabel('Concentración (Kg/m³)')
-#plt.axvline(x=resTimeL/3600, color='black', ls='--', label='Tiempo de residencia del solvente')
+plt.axvline(x=resTimeL/3600, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.ylim(ymin=0)
 plt.legend()
-plt.savefig('./figuras/columna_simple_salida.png')
+plt.savefig('./figuras/columna_simple_salida.png', dpi=100)
 plt.show()
 
 concentracion_promedio = Yout[resTimeLPos:].mean()
@@ -627,9 +680,51 @@ rendimiento_solido:     {rendimiento_solido}
 
 ## Cálculos en dos columnas en serie CC
 
+'__Definición de parámetros__'
+W   = 5000/(4*5)          # Kg/día Una tonelada mensual, dividida en 4 semanas y 5 días
+Dc  = 0.5                 # m
+A   = pi*(Dc**2)/4 
+Lc  = (W/densb)/A         # Calculo del volumen de la columna en función del volumen de materia prima a tratar
+eps = 1 - densb/dens      # Asumo porosidad de lecho como la máxima alcanzable
+L   = A*Lc*eps/(4*3600)   # Caudal de solvente, en m³/s
+tau = 8*3600
+resTimeL = A*Lc*eps/L/4
+
+Re = Re_f(L, A, Deq, visc, eps)
+Dab = Dab_f(T, visc, rad)
+Sc = Sc_f(visc, densL, Dab)
+ShL = Sh_f(Re, Sc)
+kL = kL_f(ShL, Dab, a)
+Pe = Pe_f(Re, eps)
+Dax = Dax_f(Deq, L, A, eps, Pe)
+Bi = Bi_f(kL, a, Deff)
+Shod = Shod_f(Bi, phi)
+K = Shod*Deff/(2*a) * ap 
+
+print(f'''
+Materia prima diaria: {W} Kg
+
+_Parámetros de diseño_
+Largo columna:        {Lc} m
+Diámetro columna:     {Dc} m^2
+Flujo de solvente:    {L*1000*3600} L/h
+Porosidad de lecho:   {eps}
+
+_Propiedades calculadas_
+Re:   {Re}
+Dab:  {Dab}
+Sc:   {Sc}
+ShL:  {ShL}
+kL:   {kL}
+Pe:   {Pe}
+Dax:  {Dax}
+Bi:   {Bi}
+Shod: {Shod}
+Ka:   {K}
+''')
+
 
 '____Cálculos____'
-
 # Número de puntos
 nz = 100
 nt = tau
@@ -645,9 +740,9 @@ dt = t[1] - t[0]
 
 F0 = np.ones(2*nz)
 
-first_quart = int(F0.shape[0]/4)
-second_quart = int(F0.shape[0]*2/4)
-third_quart = int(F0.shape[0]*3/4)
+first_column_z = int(F0.shape[0]*1/4)
+second_column_z = int(F0.shape[0]*2/4)
+third_column_z = int(F0.shape[0]*3/4)
 end  = int(F0.shape[0]) 
 
 F0[0::2] = porcentajeAC*dens
@@ -659,35 +754,41 @@ FF = np.ones_like(F0)
 sol[-1, ::] = F0[::]
 rendimientos = []
 
-for i in range(0,10):
+for i in range(0,3):
 
-    FF[0:first_quart:2] = sol[-1, first_quart:second_quart:2]
-    FF[1:first_quart+1:2] = sol[-1, first_quart+1:second_quart:2]
+    # Primer columna, con pre-tratamiento el día anterior
+    #  Se define con las concentraciones finales de la siguiente
+    FF[0:first_column_z:2]   = sol[-1, first_column_z:second_column_z:2]
+    FF[1:first_column_z+1:2] = sol[-1, first_column_z+1:second_column_z:2]
+    
+    FF[first_column_z:second_column_z:2]   = sol[-1, second_column_z:third_column_z:2]
+    FF[first_column_z+1:second_column_z:2] = sol[-1, second_column_z+1:third_column_z:2]
+    
+    FF[second_column_z:third_column_z:2]   = sol[-1, third_column_z:end:2]
+    FF[second_column_z+1:third_column_z:2] = sol[-1, third_column_z+1:end:2]
+    
+    FF[third_column_z:end:2]   = porcentajeAC*dens
+    FF[third_column_z+1:end:2] = eqLiq
 
-    FF[first_quart:second_quart:2] = sol[-1, second_quart:third_quart:2]
-    FF[first_quart+1:second_quart:2] = sol[-1, second_quart+1:third_quart:2]
-
-    FF[second_quart:third_quart:2]   = sol[-1, third_quart:end:2]
-    FF[second_quart+1:third_quart:2] = sol[-1, third_quart+1:end:2]
-
-    FF[third_quart:end:2] = porcentajeAC*dens
-    FF[third_quart+1:end:2] = eqLiq
-
+    # Resolución del sistema
     sol = odeint(column,FF, t, ml=1, mu=2)
-    rendimiento_solido = 1 - (sol[-1, 0:first_quart:2].mean()/(porcentajeAC*dens))
+    
+    # Tras cada iteración se calcula el rendimiento en base sólida,
+    #   se considera que el sistema converge cuando el rendimiento converge 
+    rendimiento_solido = 1 - (sol[-1, 0:first_column_z:2].mean()/(porcentajeAC*dens))
     rendimientos.append(rendimiento_solido)
 
-# Separo los resultados en una variable para
-# las concentraciones en el sólido y otra para
-# las concentraciones en el líquido
+# Grafico de convergencia
 plt.plot(rendimientos)
 plt.title("Rendimientos")
-plt.savefig('./figuras/columnas_contraccoriente_convergencia.png')
+plt.savefig('./figuras/columnas_contraccoriente_convergencia.png', dpi=100)
 plt.show()
+
+# Separo los resultados en una variable para
+#  las concentraciones en el sólido y otra para
+#  las concentraciones en el líquido
 X = sol[:, ::2]
 Y = sol[:, 1::2]
-
-
 
 
 '__Obtención de gráficos__'
@@ -698,10 +799,11 @@ Yout = Y[:, -1]
 resTimeLPos = find_nearest_pos(t, resTimeL)
 
 # Obtengo tiempos a los cuales deseo extraerles información
-tiempos = [int(nt-1)]
+tiempos = []
 for i in range(0, int(nt), int(nt/5)):
     print(i)
     tiempos.append(i)
+tiempos.append(int(nt-1))
 
 # Grafico concentraciones de fase líquida
 for i in tiempos:
@@ -711,9 +813,9 @@ for i in tiempos:
 plt.title('Fase Líquida a distintos tiempos')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
-plt.axvline(x=Lc, color='black', ls='--', label='Tiempo de residencia del solvente')
+plt.axvline(x=Lc/2, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.legend()
-plt.savefig('./figuras/columnas_contracorriente_concentracion_liquida.png')
+plt.savefig('./figuras/columnas_contracorriente_concentracion_liquida.png', dpi=100)
 plt.show()
 
 
@@ -724,22 +826,23 @@ for i in tiempos:
 plt.title('Fase Sólida a distintos tiempos')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
-plt.axvline(x=Lc, color='black', ls='--', label='Tiempo de residencia del solvente')
+plt.axvline(x=Lc/2, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.ylim(ymin=0)
 plt.legend()
-plt.savefig('./figuras/columnas_contracorriente_concentracion_solida.png')
+plt.savefig('./figuras/columnas_contracorriente_concentracion_solida.png', dpi=100)
 plt.show()
 
 
 # Grafico concentración a la salida del extractor
-plt.plot(t[resTimeLPos:]/3600, Yout[resTimeLPos:], label='Fase líquida')
+plt.plot(t[:]/3600, Yout[:], label='Fase líquida')
 
 plt.title('Concentración a la salida')
 plt.xlabel('Tiempo (h)')
 plt.ylabel('Concentración (Kg/m³)')
-#plt.axvline(x=resTimeL/3600, color='black', ls='--', label='Tiempo de residencia del solvente')
+plt.axvline(x=resTimeL/3600, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.ylim(ymin=0)
 plt.legend()
+plt.savefig('./figuras/columnas_contracorriente_salida.png',dpi=100)
 plt.show()
 
 concentracion_promedio = Yout[resTimeLPos:].mean()
@@ -752,20 +855,14 @@ rendimiento_liquido: {rendimiento_liquido}
 rendimiento_solido: {rendimiento_solido}
 ''')
 
-
-
-
 ###########################################################################
 # ## __Continuo Contracorriente__
 ###########################################################################
 
-
-
-
 '__Redefinición de parámetros__'
 Dc  = 0.3                 
-A   = pi*(Dc**2)/4 
 Lc  = 3                  
+A   = pi*(Dc**2)/4 
 
 densb = 130
 eps = 1 - densb/dens        
@@ -783,6 +880,8 @@ kL = kL_f(ShL, Dab, a)
 Pe = Pe_f(Re, eps)
 Dax = Dax_f(Deq, L, A, eps, Pe)
 Bi = kL*a/Deff
+Shod = Shod_f(Bi, phi)
+K = Shod*Deff/(2*a) * ap
 
 print(f'''
 Materia prima diaria: {S*24*3600} m³
@@ -793,14 +892,16 @@ Flujo de solvente:    {L*1000*3600} L/h
 Tiempo Residencia L:  {resTimeL/3600} h
 Tiempo Residencia S:  {resTimeS/3600} h
 
-Re:  {Re}
-Dab: {Dab}
-Sc:  {Sc}
-ShL: {ShL}
-kL:  {kL}
-Pe:  {Pe}
-Dax: {Dax}
-Bi:  {Bi}
+Re:   {Re}
+Dab:  {Dab}
+Sc:   {Sc}
+ShL:  {ShL}
+kL:   {kL}
+Pe:   {Pe}
+Dax:  {Dax}
+Bi:   {Bi}
+Shod: {Shod}
+K:    {K}
 ''')
 
 
@@ -838,8 +939,6 @@ Y = sol[:, 1::2]
 
 # #### Gráficos
 
-
-
 '__Obtención de gráficos__'
 
 # Definición de un tiempo inicial para analizar y el máximo índice de z
@@ -867,7 +966,7 @@ plt.title('Fase Líquida a distintos tiempos')
 plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.legend()
-plt.savefig('./figuras/contracorriente_concentracion_liquida.png')
+plt.savefig('./figuras/contracorriente_concentracion_liquida.png', dpi=100)
 plt.show()
 
 
@@ -880,7 +979,7 @@ plt.xlabel('Distancia (m)')
 plt.ylabel('Concentración (Kg/m³)')
 plt.ylim(ymin=0)
 plt.legend()
-plt.savefig('./figuras/contracorriente_concentracion_solida.png')
+plt.savefig('./figuras/contracorriente_concentracion_solida.png', dpi=100)
 plt.show()
 
 
@@ -892,7 +991,7 @@ plt.ylabel('Concentración (Kg/m³)')
 plt.axvline(x=resTimeL/3600, color='black', ls='--', label='Tiempo de residencia del solvente')
 plt.ylim(ymin=0)
 plt.legend()
-plt.savefig('./figuras/contracorriente_concentracion_salida.png')
+plt.savefig('./figuras/contracorriente_concentracion_salida.png', dpi=100)
 plt.show()
 
 
